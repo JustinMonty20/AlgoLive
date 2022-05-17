@@ -1,0 +1,20 @@
+{
+  "name": "AlgoLive",
+  "version": "1.0.0",
+  "description": "discord bot to display live Algorand/USD price info",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Justin Montgomery",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^17.0.34",
+    "ts-node": "^10.7.0",
+    "typescript": "^4.6.4"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.1"
+  }
+}
