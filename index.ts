@@ -7,7 +7,7 @@ import WebSocket from "ws";
 // instead of just kraken can have a DataSource that takes a websocket connection
 // has a send method takes a paylaod so kind of like a wrapper for all of this. 
 const client = new Client({intents: Intents.FLAGS.GUILDS});
-const krakenSrc = new DataSource(new WebSocket("wss://ws.kraken.com"), "kraken public ws");
+const krakenSrc: DataSource = new DataSource(new WebSocket("wss://ws.kraken.com"), "kraken public ws");
 
 // On bot start establish a connection to the Karken public websockets
 client.once('ready', ()=> {
@@ -15,6 +15,10 @@ client.once('ready', ()=> {
         console.log(`connecting to ${krakenSrc.name}...`)
     }
 });
+
+
+// might need to store when the 15 min candle ends with the first message and then update the 
+
 
 // When payload comes in from websocket calcualte the price diff & update the discord bots display accordingly. Show the percentage + / - in the 
 // last 24 hours. 
@@ -27,15 +31,6 @@ krakenSrc.ws.onmessage = (event) => {
         krakenSrc.send(payload)
     }
 }
-// TODO: Finalize data I want to subscribe to in kraken. ohlc, trade, or ticker
-const payload = JSON.stringify({
-    event: "subscribe",
-    pair: ["ALGO/USD"],
-    subscription: {
-        interval: 15,
-        name: "ohlc",
-    }
-});
 
 
 client.login(discordConfig.token)
