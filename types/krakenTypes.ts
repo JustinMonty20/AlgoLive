@@ -1,5 +1,3 @@
-import { StringMappedInteractionTypes } from "discord.js";
-
 // types of payload data we can get back from Kraken Websockets
 export type PublicMessages = "ticket" | "ohlc" | "trade" | "spread" | "book";
 
@@ -33,11 +31,4 @@ export interface SubscriptionStatus extends Omit<Subscribe, "event"> {
     event: "subscriptionStatus",
     channelName: string,
     status: string,
-}
-
-// interface for the data we will get back from ohlc public messages on kraken.
-export interface OHLC {
-    channelName: string,
-    pair: string,
-    array: number[]
 }
