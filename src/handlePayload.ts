@@ -1,6 +1,8 @@
 import { Client, Guild, GuildMember } from "discord.js";
-// import WebSocket from "ws";
+import { ActivityTypes } from "discord.js/typings/enums";
 import { DataSource, PublicMessages } from "../types";
+import { BotData, BotObject } from "../types/custom.types";
+
 import  config  from "../config";
 
 // TODO: ADD in a logger winston or pino. Probably tryin winston for this personal project. 
@@ -12,32 +14,42 @@ import  config  from "../config";
  * 
  */
 export default (bot: Client, ds: DataSource) => {
+    const botObject = {
+        botGm: async () => {return await getBotGuildMember(bot, config.guildId, config.botId)},  
+        botCu: bot.user
+    };
     // logic for updating the bot's nickname and activity can live in here.
     // inside of here we can reference everything else inside of this function.
-    // Maybe? lol
-    // const updateBot = () => {
-
-    // }
+    const updateBot = async (botObj: BotObject, data: BotData) => {
+        const {botGm, botCu} = botObj; const {difference, vwap} = data;
+        const gm = await botGm(); 
+        gm.setNickname(`$${vwap.toFixed(2)}`);
+        console.log(botCu);
+        botCu?.setActivity({name: `${difference.toFixed(2)}%`, type: ActivityTypes.WATCHING});
+    }
 
     ds.ws.onmessage = (event) => {
-        const eventMsgData = JSON.parse(event.data.toString());
-        console.log(eventMsgData);
-    
-        if(eventMsgData.status === "online") {
-            /**
-             * if we get back an online msg.
-             * Then we are good to go ahead and subscribe to the specific channel we want.
-             */
-            console.log("---> subscribing to ohlc data. <---")
-            subscribe(ds)
-        }
-
-        if(Array.isArray(eventMsgData)) {
-            // handleOhlcMsg()
+        try {
+            const eventMsgData = JSON.parse(event.data.toString());
             console.log(eventMsgData);
-            // set the nickName and the activity together in a separate function. 
-            // then we have gotten back a message from ohlc channel
-            // bot.user?.setActivity({name: `fetching current Algorand price... ${count}`});
+        
+            if(eventMsgData.status === "online") {
+                /**
+                 * if we get back an online msg.
+                 * Then we are good to go ahead and subscribe to the specific channel we want.
+                 */
+                console.log("---> subscribing to ohlc data. <---")
+                subscribe(ds)
+            }
+
+            if(Array.isArray(eventMsgData)) {
+                const innerDataArray = eventMsgData[1];
+                // set the nickName and the activity together in a separate function. 
+                // then we have gotten back a message from ohlc channel
+                updateBot(botObject, {difference:  5, vwap: Number(innerDataArray[6])});
+            }
+        } catch(err) {
+
         }
     }
 }
@@ -53,14 +65,21 @@ export default (bot: Client, ds: DataSource) => {
  * @param botId 
  * @returns 
  */
-const getBot = (bot: Client, guildId: string, botId: string): GuildMember | undefined => {
-    const server: Guild | undefined =  bot.guilds.cache.get(guildId);
-    return server?.members.cache.get(botId);
+const getBotGuildMember = async (bot: Client, guildId: string, botId: string): Promise<GuildMember> => {
+        try {
+            // retrieve Guild from all guilds bot is apart of. 
+            const server: Guild = await bot.guilds.fetch(guildId);
+            // get the guild member representing the bot.
+            const gm: GuildMember = await server.members.fetch(botId);
+            return gm;
+        } catch(err) {
+            throw err
+        }
 }
 
 /**
  * 
- * @param ds 
+ * @param ds DataSource class. Wrapper for ws implementation we want to use. 
  */
 const subscribe = (ds: DataSource) => {
     ds.ws.send(subscribePayload("ohlc"));
